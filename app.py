@@ -152,8 +152,87 @@ def main():
     st.title("🐄 Cattle AI Classifier")
     st.markdown("**AI-powered breed recognition and type classification for cattle and buffaloes**")
     
-    # Sidebar configuration
-    st.sidebar.header("🛠️ Configuration")
+
+    # Fun interactive sidebar (replaces configuration)
+    st.sidebar.markdown("## 🎪 Welcome to the Fun Barn!")
+    st.sidebar.write("Pick a playful mode and have fun while the AI works behind the scenes.")
+    mode = st.sidebar.selectbox("Choose a mode", ["Cow Mode 🐄", "Buffalo Mode 🐃", "Detective Mode 🕵️", "Party Mode 🎉"])
+    st.sidebar.write("Mode description:")
+    if mode == "Cow Mode 🐄":
+        st.sidebar.write("Gentle and accurate — favors breed recognition.")
+        task_type = "breed_recognition"
+    elif mode == "Buffalo Mode 🐃":
+        st.sidebar.write("Robust and strong — favors type classification.")
+        task_type = "type_classification"
+    elif mode == "Detective Mode 🕵️":
+        st.sidebar.write("Deep analysis mode — higher verbosity.")
+        task_type = "breed_recognition"
+    else:
+        st.sidebar.write("Random fun! Mix of both.")
+        import random
+        task_type = random.choice(["breed_recognition", "type_classification"])
+        if st.sidebar.button("🎲 Surprise me!"):
+            st.sidebar.balloons()
+
+    st.sidebar.divider()
+    st.sidebar.markdown("### 🎯 Quick Presets")
+    if st.sidebar.button("🔎 Quick Breed (Fast)"):
+        task_type = "breed_recognition"
+        st.sidebar.success("Preset applied: Quick Breed")
+    if st.sidebar.button("🏷️ Quick Type (Fast)"):
+        task_type = "type_classification"
+        st.sidebar.success("Preset applied: Quick Type")
+
+    st.sidebar.markdown("### ✨ Fun Extras")
+    if st.sidebar.button("📸 Show Random Cow Fact"):
+        facts = [
+            "Cows have almost panoramic vision — great for spotting surprises!",
+            "A cow's nose print is as unique as a human fingerprint.",
+            "Cows have four stomach compartments — that's multi-tasking digestion!"
+        ]
+        import random
+        st.sidebar.info(random.choice(facts))
+
+    
+# Password-protected settings modal
+if st.sidebar.button("🔒 Open Settings"):
+    st.session_state["show_settings_modal"] = True
+
+# Render modal if requested
+if st.session_state.get("show_settings_modal"):
+    # Simple modal UI
+    st.markdown('<div class="modal-overlay"><div class="modal-box">', unsafe_allow_html=True)
+    pwd = st.text_input("Enter admin password to unlock settings", type="password")
+    cols = st.columns([3,1])
+    with cols[1]:
+        if st.button("Unlock"):
+            if pwd == "letmein123":  # demo password; you can change this
+                st.session_state["settings_unlocked"] = True
+                st.session_state["show_settings_modal"] = False
+                st.experimental_rerun()
+            else:
+                st.error("Incorrect password.")
+    st.markdown('</div></div>', unsafe_allow_html=True)
+
+# If unlocked, show hidden developer settings somewhere
+if st.session_state.get("settings_unlocked"):
+    with st.expander("🔧 Developer Settings (Unlocked)", expanded=True):
+        api_key = st.text_input("Gemini API Key (paste here)", value=st.secrets.get("GEMINI_API_KEY") or os.getenv("GEMINI_API_KEY") or "")
+        demo_mode = st.checkbox("Demo mode (simulate results)", value=True)
+        if st.button("Save Developer Settings"):
+            st.success("Settings saved for this session.")
+# Hidden developer settings for API key and advanced options
+    with st.sidebar.expander("🔧 Developer Settings (Advanced)", expanded=False):
+        api_key = st.secrets.get("GEMINI_API_KEY") or os.getenv("GEMINI_API_KEY")
+        if not api_key:
+            st.error("⚠️ Gemini API key not configured! Add it in secrets or environment to enable real analysis.")
+            # For demo mode, allow a fake key toggle
+            demo = st.checkbox("Enable demo mode (no external API)", value=True)
+            if demo:
+                st.warning("Demo mode: results will be simulated.")
+        else:
+            st.success("🔒 Gemini API key detected.")
+
     
     # --- API Key handling for Gemini ---
     api_key = st.secrets.get("GEMINI_API_KEY") or os.getenv("GEMINI_API_KEY")
@@ -184,16 +263,87 @@ def main():
         help="Using a dedicated Gemini Vision model."
     )
     
-    # Task type selection
-    task_type = st.sidebar.radio(
-        "📋 Analysis Type",
-        ["breed_recognition", "type_classification"],
-        format_func=lambda x: "🔍 Breed Recognition" if x == "breed_recognition" else "📊 Type Classification",
-        help="Choose the type of analysis to perform"
-    )
+    # Task type selection moved to main area as large emoji-based selector
+    # Default task_type (will be set by main controls below)
+    task_type = st.session_state.get("task_type", "breed_recognition")
     
     # Main interface
-    st.header("📤 Upload Images")
+    
+# --- Large emoji-based selector (main area) ---
+st.markdown("<br>", unsafe_allow_html=True)
+st.markdown("### 🎛️ Pick a Fun Mode (big buttons!)")
+col1, col2, col3, col4 = st.columns(4)
+if "task_type" not in st.session_state:
+    st.session_state["task_type"] = "breed_recognition"
+with col1:
+    if st.button("🐄
+Cow Mode
+( Breed )", use_container_width=True):
+        st.session_state["task_type"] = "breed_recognition"
+with col2:
+    if st.button("🐃
+Buffalo Mode
+( Type )", use_container_width=True):
+        st.session_state["task_type"] = "type_classification"
+with col3:
+    if st.button("🕵️
+Detective
+( Deep )", use_container_width=True):
+        st.session_state["task_type"] = "breed_recognition"
+with col4:
+    if st.button("🎉
+Party
+( Surprise )", use_container_width=True):
+        import random
+        st.session_state["task_type"] = random.choice(["breed_recognition", "type_classification"])
+
+st.markdown(f"**Selected mode:** {st.session_state['task_type']}")
+# --- end selector ---
+
+# --- Audio and animation setup ---
+# Simple short beep wav (encoded bytes). This is a tiny 0.1s sine wave beep.
+BEEP_WAV = b'RIFF$\x00\x00\x00WAVEfmt ' + b'\x10\x00\x00\x00' + b'\x01\x00\x01\x00' + b'\x40\x1f\x00\x00' + b'\x80>\x00\x00' + b'\x02\x00\x10\x00' + b'data\x00\x00\x00\x00'
+# Note: For a real app, replace with a proper short audio file in the repo.
+
+# CSS for modal-like settings and badges
+st.markdown(
+    """<style>
+    /* Modal overlay */
+    .modal-overlay {
+        position: fixed;
+        top: 0; left: 0; right:0; bottom:0;
+        background: rgba(0,0,0,0.45);
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        z-index:9999;
+    }
+    .modal-box {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        width: 360px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+    /* Animated badge */
+    .badge {
+        display:inline-block;
+        padding:8px 12px;
+        border-radius:20px;
+        background:linear-gradient(90deg,#ffd27f,#ff9a9e);
+        font-weight:600;
+        animation: pulse 1.6s infinite;
+    }
+    @keyframes pulse {
+        0% { transform: scale(1); filter:brightness(1); }
+        50% { transform: scale(1.06); filter:brightness(1.08); }
+        100% { transform: scale(1); filter:brightness(1); }
+    }
+    </style>""", unsafe_allow_html=True
+)
+# --- end CSS ---
+
+st.header("📤 Upload Images")
     
     uploaded_files = st.file_uploader(
         "Upload cattle/buffalo images for analysis",
@@ -311,7 +461,26 @@ def main():
         1. **Problem Statement ID 25005**: Image-based Animal Type Classification for cattle and buffaloes
         2. **Problem Statement ID 25004**: Image-based breed recognition for cattle and buffaloes of India
         
-        **Features:**
+        
+# --- Post-analysis celebration (fallback placement) ---
+try:
+    st.balloons()
+except Exception:
+    pass
+try:
+    st.audio(BEEP_WAV, format='audio/wav')
+except Exception:
+    pass
+st.markdown("### 🏅 Result Badges (Demo)")
+cols = st.columns(3)
+import random
+acc = random.randint(75, 99)
+conf = random.randint(60, 99)
+speed = random.choice(["Fast", "Medium", "Slow"])
+cols[0].markdown(f"<div class='badge'>Accuracy: {acc}%</div>", unsafe_allow_html=True)
+cols[1].markdown(f"<div class='badge'>Confidence: {conf}%</div>", unsafe_allow_html=True)
+cols[2].markdown(f"<div class='badge'>Speed: {speed}</div>", unsafe_allow_html=True)
+**Features:**
         - Upload up to 10 images for batch analysis
         - Uses the dedicated **Gemini Vision API** ({GEMINI_VISION_MODEL})
         - Breed recognition for Indian cattle and buffalo breeds
