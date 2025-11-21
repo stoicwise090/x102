@@ -276,7 +276,7 @@ col1, col2, col3, col4 = st.columns(4)
 if "task_type" not in st.session_state:
     st.session_state["task_type"] = "breed_recognition"
 with col1:
-    if st.button("🐄
+    if st.button("🐄\nCow Mode\n( Breed )", use_container_width=True):
 Cow Mode
 ( Breed )", use_container_width=True):
         st.session_state["task_type"] = "breed_recognition"
